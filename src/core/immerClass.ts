@@ -45,16 +45,21 @@ export class Immer implements ProducersFns {
 	}
 
 	/**
+	 * 代码注释里已经简要地阐述了produce函数的用法，更多细节看代码实现
 	 * The `produce` function takes a value and a "recipe function" (whose
 	 * return value often depends on the base state). The recipe function is
 	 * free to mutate its first argument however it wants. All mutations are
 	 * only ever applied to a __copy__ of the base state.
+	 * 可以传入一个base对象加一个recipe函数作参数
+	 * 所有的更改只会作用在 base 对象的 __copy__ 状态上，对原对象的原属性不会有改变
 	 *
 	 * Pass only a function to create a "curried producer" which relieves you
 	 * from passing the recipe function every time.
+	 * 同时支持 curried function 的用法 —— 只需要传入一个 function 参数
 	 *
 	 * Only plain objects and arrays are made mutable. All other objects are
 	 * considered uncopyable.
+	 * 一般来说，只支持简单对象和数组
 	 *
 	 * Note: This function is __bound__ to its `Immer` instance.
 	 *
@@ -64,40 +69,46 @@ export class Immer implements ProducersFns {
 	 * @returns {any} a new state, or the initial state if nothing was modified
 	 */
 	produce: IProduce = (base: any, recipe?: any, patchListener?: any) => {
-		// curried invocation
+		// curried invocation - 如果第一个参数是个函数且第二个参数不是个函数，那么就采用 curried 函数的方式
 		if (typeof base === "function" && typeof recipe !== "function") {
-			const defaultBase = recipe
-			recipe = base
+			// 在这种调用方式下，需要重新参数和变量的名字
+			const defaultBase = recipe // 第二个参数实际上是 默认的 base
+			recipe = base // 第一个参数实际上是 recipe 函数
 
 			const self = this
-			return function curriedProduce(
-				this: any,
-				base = defaultBase,
-				...args: any[]
+			return function curriedProduce( // 返回一个新的函数
+				this: any, // this作function的第一个参数，这是 typescript 的语法，实际不生效 https://www.typescriptlang.org/docs/handbook/2/functions.html#declaring-this-in-a-function
+				base = defaultBase, // 实际上的第一个参数，默认值引用见75行
+				...args: any[] // 其余的参数
 			) {
+				// 再次调用了 produce ，使用的是标准的调用方法 —— 第一个参数是 base， 第二个是 receipt 函数
 				return self.produce(base, (draft: Drafted) => recipe.call(this, draft, ...args)) // prettier-ignore
 			}
 		}
 
+		// 检查参数类型
 		if (typeof recipe !== "function") die(6)
 		if (patchListener !== undefined && typeof patchListener !== "function")
 			die(7)
 
 		let result
 
+		//只有普通对象，数组和immerable classes能被草稿化
 		// Only plain objects, arrays, and "immerable classes" are drafted.
 		if (isDraftable(base)) {
-			const scope = enterScope(this)
-			const proxy = createProxy(this, base, undefined)
+			const scope = enterScope(this) // scope 是 immer 的一个内部概念，当目标对象有复杂嵌套时，利用 scope 区分和跟踪嵌套处理的过程
+			const proxy = createProxy(this, base, undefined) // immer 的核心就是 proxy，利用proxy拦截处理了
 			let hasError = true
 			try {
-				result = recipe(proxy)
+				result = recipe(proxy) // 在 proxy 上执行 recipe 函数
 				hasError = false
 			} finally {
+				// 并没有使用 catch 而是利用了 finally 一定会被执行的特性
 				// finally instead of catch + rethrow better preserves original stack
 				if (hasError) revokeScope(scope)
 				else leaveScope(scope)
 			}
+			// 支持Promise形式的异步操作，具体用法参考 https://immerjs.github.io/immer/async 本文不细解
 			if (typeof Promise !== "undefined" && result instanceof Promise) {
 				return result.then(
 					result => {
@@ -110,7 +121,9 @@ export class Immer implements ProducersFns {
 					}
 				)
 			}
+			// 如果有 patchListener 就附上
 			usePatchesInScope(scope, patchListener)
+			// result 是 利用 proxy 得到的结果，最终处理结束
 			return processResult(result, scope)
 		} else if (!base || typeof base !== "object") {
 			result = recipe(base)
@@ -215,12 +228,13 @@ export function createProxy<T extends Objectish>(
 	parent?: ImmerState
 ): Drafted<T, ImmerState> {
 	// precondition: createProxy should be guarded by isDraftable, so we know we can safely draft
+	// 根据不同的数据类型，使用不同的策略进行草稿化代理
 	const draft: Drafted = isMap(value)
 		? getPlugin("MapSet").proxyMap_(value, parent)
 		: isSet(value)
 		? getPlugin("MapSet").proxySet_(value, parent)
 		: immer.useProxies_
-		? createProxyProxy(value, parent)
+		? createProxyProxy(value, parent) // 重点看看对普通对象使用 ES6 Proxy 实现的代理
 		: getPlugin("ES5").createES5Proxy_(value, parent)
 
 	const scope = parent ? parent.scope_ : getCurrentScope()

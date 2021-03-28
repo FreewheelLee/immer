@@ -23,7 +23,7 @@ export interface ImmerScope {
 	immer_: Immer
 	unfinalizedDrafts_: number
 }
-
+// 模块层面的变量 —— 因此是个单例
 let currentScope: ImmerScope | undefined
 
 export function getCurrentScope() {
@@ -35,6 +35,7 @@ function createScope(
 	parent_: ImmerScope | undefined,
 	immer_: Immer
 ): ImmerScope {
+	// scope 的数据结构 —— 实际是个单链表，parent_是个指向 parent scope 的引用
 	return {
 		drafts_: [],
 		parent_,
@@ -72,6 +73,7 @@ export function leaveScope(scope: ImmerScope) {
 }
 
 export function enterScope(immer: Immer) {
+	// 创建新scope并且将currentScope变量更新
 	return (currentScope = createScope(currentScope, immer))
 }
 

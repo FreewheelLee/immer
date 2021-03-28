@@ -158,6 +158,7 @@ export function isSet(target: any): target is AnySet {
 }
 /*#__PURE__*/
 export function latest(state: ImmerState): any {
+	// 优先返回 copy_
 	return state.copy_ || state.base_
 }
 

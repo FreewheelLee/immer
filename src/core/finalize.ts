@@ -46,7 +46,7 @@ export function processResult(result: any, scope: ImmerScope) {
 			)
 		}
 	} else {
-		// Finalize the base draft.
+		// Finalize the base draft.  最终确定草稿，得到结果
 		result = finalize(scope, baseDraft, [])
 	}
 	revokeScope(scope)
