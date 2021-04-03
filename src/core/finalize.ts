@@ -28,6 +28,7 @@ export function processResult(result: any, scope: ImmerScope) {
 	if (!scope.immer_.useProxies_)
 		getPlugin("ES5").willFinalizeES5_(scope, result, isReplaced)
 	if (isReplaced) {
+		console.log("isReplaced")
 		if (baseDraft[DRAFT_STATE].modified_) {
 			revokeScope(scope)
 			die(4)
@@ -46,6 +47,7 @@ export function processResult(result: any, scope: ImmerScope) {
 			)
 		}
 	} else {
+		console.log("not replaced")
 		// Finalize the base draft.  最终确定草稿，得到结果
 		result = finalize(scope, baseDraft, [])
 	}

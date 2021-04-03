@@ -32,11 +32,11 @@ it("can update readonly state via curried api", () => {
 	const newState = state.map(mapper)
 	expect(newState).not.toBe(state)
 	expect(newState).toEqual(expectedState)
-
-	console.log("isDraftable(1) " + isDraftable(1))
-	console.log("isDraftable(true) " + isDraftable(true))
-	console.log("isDraftable(false) " + isDraftable(false))
-	console.log("isDraftable(hello) " + isDraftable("hello"))
+	//
+	// console.log("isDraftable(1) " + isDraftable(1))
+	// console.log("isDraftable(true) " + isDraftable(true))
+	// console.log("isDraftable(false) " + isDraftable(false))
+	// console.log("isDraftable(hello) " + isDraftable("hello"))
 
 	const baseState = [
 		{
@@ -53,5 +53,5 @@ it("can update readonly state via curried api", () => {
 		draftState.push({todo: "Tweet about it"})
 		draftState[1].done = true
 	})
-	console.log(JSON.stringify(nextState, null, 2))
+	// console.log(JSON.stringify(nextState, null, 2))
 })

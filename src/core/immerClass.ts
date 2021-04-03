@@ -103,10 +103,10 @@ export class Immer implements ProducersFns {
 				result = recipe(proxy) // 在 proxy 上执行 recipe 函数
 				hasError = false
 			} finally {
-				// 并没有使用 catch 而是利用了 finally 一定会被执行的特性
-				// finally instead of catch + rethrow better preserves original stack
+				// 并没有使用 catch + rethrow 而是利用了 finally 一定会被执行的特性
 				if (hasError) revokeScope(scope)
-				else leaveScope(scope)
+				// revoke （撤销）scope 中的 proxy
+				else leaveScope(scope) // 离开当前scope
 			}
 			// 支持Promise形式的异步操作，具体用法参考 https://immerjs.github.io/immer/async 本文不细解
 			if (typeof Promise !== "undefined" && result instanceof Promise) {
