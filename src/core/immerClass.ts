@@ -110,6 +110,7 @@ export class Immer implements ProducersFns {
 			}
 			// 支持Promise形式的异步操作，具体用法参考 https://immerjs.github.io/immer/async 本文不细解
 			if (typeof Promise !== "undefined" && result instanceof Promise) {
+				console.log("result instanceof Promise")
 				return result.then(
 					result => {
 						usePatchesInScope(scope, patchListener)
